@@ -48,8 +48,13 @@ class App extends Component {
     }
 
     showCard(id) {
+        if (this.state.cardInterval) {
+            // ALREADY LOCKED
+            return;
+        }
         const cards = this.state.gameCards,
             moves = this.state.gameMoves;
+
 
         cards[id].flipped = true;
         this.setState({
@@ -57,47 +62,36 @@ class App extends Component {
             gameMoves: (moves + 1)
         });
         if (this.state.selectedCard) {
-            let found = this.state.foundCouples;
             if (this.state.selectedCard.color === cards[id].color) {
                 // CARDS MATCH
                 this.setMatched(cards[id], cards[this.state.selectedCard.id]);
-                found++;
+                this.setState({
+                    gameCards: cards,
+                    selectedCard: null,
+                    foundCouples: this.state.foundCouples + 1
+                });
             } else {
                 // CARDS UNMATCH
-                this.setUnflipped(cards[id], cards[this.state.selectedCard.id]);
-            }
-            if (this.state.cardInterval) {
-                clearInterval(this.state.cardInterval);
+                const interval = setInterval(() => {
+                    this.setUnflipped(cards[id], cards[this.state.selectedCard.id]);
+                    this.setState({
+                        gameCards: cards,
+                        selectedCard: null,
+                        cardInterval: null
+                    });
+                    clearInterval(interval);
+                }, 2000);
                 this.setState({
-                    cardInterval: null
+                    cardInterval: interval
                 });
             }
-            this.setState({
-                gameCards: cards,
-                selectedCard: null,
-                foundCouples: found
-            });
+
         } else {
             // SELECT CARD
-            const intervalId = setInterval(() => {
-                this.unflipCard(id);
-            }, 5000);
             this.setState({
-                selectedCard: {id: id, color: cards[id].color},
-                cardInterval: intervalId
+                selectedCard: {id: id, color: cards[id].color}
             });
         }
-    }
-
-    unflipCard(id) {
-        const cards = this.state.gameCards;
-        cards[id].flipped = false;
-        clearInterval(this.state.cardInterval);
-        this.setState({
-            gameCards: cards,
-            selectedCard: null,
-            cardInterval: null
-        });
     }
 
     setMatched(...cards) {
@@ -142,7 +136,7 @@ class App extends Component {
 
     render() {
         let finishedMessage;
-        if(this.gameFinished()){
+        if (this.gameFinished()) {
             finishedMessage = <h1>Game finished in {this.state.gameMoves} Moves</h1>
         }
         return (
