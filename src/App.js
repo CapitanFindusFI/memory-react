@@ -56,6 +56,10 @@ class App extends Component {
             moves = this.state.gameMoves;
 
 
+        if (cards[id].flipped || cards[id].matched) {
+            return;
+        }
+
         cards[id].flipped = true;
         this.setState({
             gameCards: cards,
@@ -70,6 +74,12 @@ class App extends Component {
                     selectedCard: null,
                     foundCouples: this.state.foundCouples + 1
                 });
+                if (this.state.cardInterval) {
+                    clearInterval(this.state.cardInterval);
+                    this.setState({
+                        cardInterval: null
+                    });
+                }
             } else {
                 // CARDS UNMATCH
                 const interval = setInterval(() => {
